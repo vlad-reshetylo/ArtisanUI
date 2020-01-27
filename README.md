@@ -6,7 +6,7 @@ You can install the package via composer:
 
 ```bash
 composer require vladreshet/artisanui
-php artisan vendor:publish VladReshet\\Artisanui\\ArtisanuiServiceProvider
+php artisan vendor:publish --provider=VladReshet\\Artisanui\\ArtisanuiServiceProvider
 ```
 
 ## Usage
