@@ -1,11 +1,4 @@
-# Very short description of the package
-
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/vladreshet/artisanui.svg?style=flat-square)](https://packagist.org/packages/vladreshet/artisanui)
-[![Build Status](https://img.shields.io/travis/vladreshet/artisanui/master.svg?style=flat-square)](https://travis-ci.org/vladreshet/artisanui)
-[![Quality Score](https://img.shields.io/scrutinizer/g/vladreshet/artisanui.svg?style=flat-square)](https://scrutinizer-ci.com/g/vladreshet/artisanui)
-[![Total Downloads](https://img.shields.io/packagist/dt/vladreshet/artisanui.svg?style=flat-square)](https://packagist.org/packages/vladreshet/artisanui)
-
-This is where your description should go. Try and limit it to a paragraph or two, and maybe throw in a mention of what PSRs you support to avoid any confusion with users and contributors.
+CLI User Interface for Laravel Artisan.
 
 ## Installation
 
@@ -13,18 +6,17 @@ You can install the package via composer:
 
 ```bash
 composer require vladreshet/artisanui
+php artisan vendor:publish VladReshet\\Artisanui\\ArtisanuiServiceProvider
 ```
 
 ## Usage
 
-``` php
-// Usage description here
-```
-
-### Testing
-
 ``` bash
-composer test
+php artisanui
+```
+or
+``` bash
+./artisanui
 ```
 
 ### Changelog
@@ -47,7 +39,3 @@ If you discover any security related issues, please email vlreshet@gmail.com ins
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-## Laravel Package Boilerplate
-
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).
