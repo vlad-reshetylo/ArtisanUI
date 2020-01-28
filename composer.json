@@ -8,7 +8,6 @@
     ],
     "homepage": "https://github.com/vladreshet/artisanui",
     "license": "MIT",
-    "type": "package",
     "authors": [
         {
             "name": "Vlad Reshetilo",
@@ -16,7 +15,7 @@
             "role": "Developer"
         }
     ],
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "php": "^7.1",
