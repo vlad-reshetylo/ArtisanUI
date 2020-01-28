@@ -13,6 +13,8 @@ php artisan vendor:publish --provider=VladReshet\\ArtisanUI\\ArtisanUIServicePro
 
 ## Usage
 
+You can use it like a usual laravel artisan.
+
 ``` bash
 php artisanui
 ```
