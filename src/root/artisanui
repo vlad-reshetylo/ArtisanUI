@@ -3,6 +3,7 @@
 
 use PhpSchool\CliMenu\CliMenu;
 use PhpSchool\CliMenu\Builder\CliMenuBuilder;
+use VladReshet\Artisanui\Artisanui;
 
 define('LARAVEL_START', microtime(true));
 
@@ -12,6 +13,4 @@ $app = require_once __DIR__.'/bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
 
-$ui = new VladReshet\Artisanui\Artisanui($kernel);
-
-$ui->launch();
+$ui = (new Artisanui($kernel))->launch();
