@@ -4,7 +4,7 @@ namespace VladReshet\ArtisanUI;
 
 use Illuminate\Support\ServiceProvider;
 
-class ArtisanUI extends ServiceProvider
+class ArtisanUIServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
