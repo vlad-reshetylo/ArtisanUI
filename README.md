@@ -1,3 +1,9 @@
+[![GitHub issues](https://img.shields.io/github/issues/VladReshet/Artisanui)](https://github.com/VladReshet/Artisanui/issues)
+[![GitHub forks](https://img.shields.io/github/forks/VladReshet/Artisanui)](https://github.com/VladReshet/Artisanui/network)
+[![GitHub stars](https://img.shields.io/github/stars/VladReshet/Artisanui)](https://github.com/VladReshet/Artisanui/stargazers)
+[![GitHub license](https://img.shields.io/github/license/VladReshet/Artisanui)](https://github.com/VladReshet/ArtisanUI/blob/master/LICENSE)
+
+
 🖥️ CLI User Interface for Laravel Artisan. Supports customizing (config/artisanui.php)!
 
 ![Preview](./preview.jpg)
