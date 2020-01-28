@@ -1,9 +1,10 @@
 {
     "name": "vladreshet/artisanui",
     "description": "CLI UI for Laravel Artisan",
-    "version": "0.1.0",
     "keywords": [
-        "vladreshet",
+        "artisan",
+        "cli",
+        "php",
         "artisanui"
     ],
     "homepage": "https://github.com/vladreshet/artisanui",
