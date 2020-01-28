@@ -16,7 +16,7 @@
             "role": "Developer"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require": {
         "php": "^7.1",
         "php-school/cli-menu": "dev-master#2edd9d26712b20e15f193dd5da7353709d1ed440"
