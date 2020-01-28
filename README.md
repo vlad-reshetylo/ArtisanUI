@@ -13,9 +13,20 @@
 You can install the package via composer:
 
 ```bash
-composer require vladreshet/artisanui
+composer require vladreshet/artisanui --dev
+```
+after updating composer, add the ServiceProvider to the providers array in config/app.php
+
+
+_VladReshet\ArtisanUI\ArtisanUIServiceProvider::class_
+
+
+this will allow you to do the next:
+```bash
 php artisan vendor:publish --provider=VladReshet\\ArtisanUI\\ArtisanUIServiceProvider
 ```
+
+**Attention! Now this package uses not stable version of one of its dependencies. It will be fixed as soon as that dependency will release new update, but for now your project minimum-stability settings should be not higher than "dev" to install this package**
 
 ## Usage
 
