@@ -1,13 +1,13 @@
 <?php
 
-namespace VladReshet\Artisanui;
+namespace VladReshet\ArtisanUI;
 
 use Illuminate\Support\Facades\Facade;
 
 /**
- * @see \VladReshet\Artisanui\Skeleton\SkeletonClass
+ * @see \VladReshet\ArtisanUI\Skeleton\SkeletonClass
  */
-class ArtisanuiFacade extends Facade
+class ArtisanUI extends Facade
 {
     /**
      * Get the registered name of the component.

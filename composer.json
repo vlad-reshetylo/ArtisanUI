@@ -18,25 +18,20 @@
     ],
     "require": {
         "php": "^7.1",
-        "php-school/cli-menu": "dev-master"
+        "php-school/cli-menu": "dev-master#2edd9d26712b20e15f193dd5da7353709d1ed440"
     },
     "autoload": {
         "psr-4": {
-            "VladReshet\\Artisanui\\": "src"
-        }
-    },
-    "autoload-dev": {
-        "psr-4": {
-            "VladReshet\\Artisanui\\Tests\\": "tests"
+            "VladReshet\\ArtisanUI\\": "src"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "VladReshet\\Artisanui\\ArtisanuiServiceProvider"
+                "VladReshet\\ArtisanUI\\ArtisanUIServiceProvider"
             ],
             "aliases": {
-                "Artisanui": "VladReshet\\Artisanui\\ArtisanuiFacade"
+                "ArtisanUI": "VladReshet\\ArtisanUI\\ArtisanUIFacade"
             }
         }
     }

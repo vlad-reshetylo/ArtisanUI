@@ -1,6 +1,6 @@
 <?php
 
-namespace VladReshet\Artisanui;
+namespace VladReshet\ArtisanUI;
 
 use Illuminate\Contracts\Console\Kernel;
 use PhpSchool\CliMenu\CliMenu;
@@ -12,7 +12,7 @@ use Symfony\Component\Console\Input\InputArgument;
 use PhpSchool\CliMenu\Style\CheckboxStyle;
 use PhpSchool\CliMenu\Style\SelectableStyle;
 
-class Artisanui
+class ArtisanUI
 {
     public function __construct(Kernel $kernel)
     {

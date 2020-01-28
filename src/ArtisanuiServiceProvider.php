@@ -1,10 +1,10 @@
 <?php
 
-namespace VladReshet\Artisanui;
+namespace VladReshet\ArtisanUI;
 
 use Illuminate\Support\ServiceProvider;
 
-class ArtisanuiServiceProvider extends ServiceProvider
+class ArtisanUI extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
