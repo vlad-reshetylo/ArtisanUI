@@ -1,4 +1,6 @@
-CLI User Interface for Laravel Artisan.
+🖥️ CLI User Interface for Laravel Artisan. Supports customizing (config/artisanui.php)!
+
+![Preview](./preview.jpg)
 
 ## Installation
 
