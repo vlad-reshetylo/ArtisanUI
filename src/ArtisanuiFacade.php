@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Facade;
 /**
  * @see \VladReshet\ArtisanUI\Skeleton\SkeletonClass
  */
-class ArtisanUI extends Facade
+class ArtisanUIFacade extends Facade
 {
     /**
      * Get the registered name of the component.
