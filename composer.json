@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": "^7.1",
-        "php-school/cli-menu": "^3.2"
+        "php-school/cli-menu": "dev-master"
     },
     "autoload": {
         "psr-4": {
