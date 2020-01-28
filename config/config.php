@@ -20,5 +20,6 @@ return [
         'line_break' => '='
     ],
     'favourite' => [
+        'make:migration',
     ] 
 ];

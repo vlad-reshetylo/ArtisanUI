@@ -13,11 +13,8 @@ class ArtisanUIServiceProvider extends ServiceProvider
     {
         $this->publishes([
             __DIR__.'/root/artisanui' => base_path('artisanui'),
-        ], 'artisanui');
-
-        $this->publishes([
             __DIR__.'/../config/config.php' => config_path('artisanui.php'),
-        ], 'config');
+        ], 'artisanui');
     }
 
     public function register()
