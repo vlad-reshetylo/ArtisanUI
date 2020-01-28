@@ -14,14 +14,29 @@ use PhpSchool\CliMenu\Style\SelectableStyle;
 
 class ArtisanUI
 {
+    private $artisan;
+    private $commands;
+    private $favourite;
+    private $title;
+    private $all;
+
     public function __construct(Kernel $kernel)
     {
         $this->artisan = $kernel;
     }
 
+    public static function getItem(string $name, $command) 
+    {
+        return (object) [
+            'name' => $name,
+            'command' => $command
+        ];
+    }
+
     public function launch()
     {
         $this->commands = $this->getAllArtisanCommands();
+        $this->favourite = $this->loadFavouriteCommands();
 
         $this->title = config('artisanui.title');
 
@@ -166,10 +181,11 @@ class ArtisanUI
     {
         $menu = new CliMenuBuilder();
 
+        // yeah, right like in JavaScript! :)
         $self = $this;
 
-        foreach ($this->commands as $group => $list) {
-            $menu->addSubMenu($group, function (CliMenuBuilder $builder) use ($list, $group, $self) {
+        $getItemCallback = function ($list, $group) use ($self) {
+            return function (CliMenuBuilder $builder) use ($list, $group, $self) {
                 $builder->setTitle("{$self->title} > {$group}");
 
                 foreach ($list as $cmd) {
@@ -183,28 +199,62 @@ class ArtisanUI
                 }
 
                 $builder = $builder->addLineBreak('-');
-            });
+            };
+        };
+
+        if (empty($this->favourite)) {
+            $menu->addStaticItem(
+                'You can add your favourite commands in config/artisanui.php to get fast access to them!'
+            );
+        } else {
+            $menu->addStaticItem('Favourite:')
+                 ->addLineBreak(" ");
+
+            foreach ($this->all as $name => $command) {
+                if (!in_array($name, $this->favourite)) {
+                    continue;
+                }   
+
+                $argsNumber = count($command->getDefinition()->getArguments());
+
+                $item = self::getItem($name, $command);
+
+                if ($argsNumber === 0) {
+                    $menu->addItem($name, $this->getExecutionCallback($item, $this));
+                } else {
+                    $menu->addSubMenu($name, $this->getCommandCallback($item, $this));
+                }
+            }
+        }
+
+        $menu->addLineBreak(" ")
+             ->addLineBreak(config('artisanui.ui.line_break', '='));
+
+        foreach ($this->commands as $group => $list) {
+            $menu->addSubMenu($group, $getItemCallback($list, $group));
         }
 
         return $menu;
     }
 
+    private function loadFavouriteCommands()
+    {
+        return config('artisanui.favourite', []);
+    }
+
     private function getAllArtisanCommands()
     {
-        $all = $this->artisan->all();
+        $this->all = $this->artisan->all();
 
         $groups = [];
         $common = [];
 
-        foreach ($all as $name => $command) {
+        foreach ($this->all as $name => $command) {
             $cmd = explode(':', $name);
 
             $chunksNumber = count($cmd);
 
-            $item = (object) [
-                'name' => $name,
-                'command' => $command
-            ];
+            $item = self::getItem($name, $command);
 
             if ($chunksNumber === 1 || $chunksNumber > 2) {
                 $common[] = $item;

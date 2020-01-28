@@ -1,7 +1,7 @@
 {
     "name": "vladreshet/artisanui",
     "description": "CLI UI for Laravel Artisan",
-    "version": "0.0.3",
+    "version": "0.1.0",
     "keywords": [
         "vladreshet",
         "artisanui"
