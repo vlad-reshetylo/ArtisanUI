@@ -9,6 +9,8 @@ use Symfony\Component\Console\Input\ArgvInput;
 use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Input\InputArgument;
+use PhpSchool\CliMenu\Style\CheckboxStyle;
+use PhpSchool\CliMenu\Style\SelectableStyle;
 
 class Artisanui
 {
@@ -21,16 +23,30 @@ class Artisanui
     {
         $this->commands = $this->getAllArtisanCommands();
 
-        $this->title = env('APP_NAME') . " CLI UI";
+        $this->title = config('artisanui.title');
 
-        $menu = $this->buildMenu()
-                     ->addLineBreak('-')
-                     ->setBorder(1, 2, 'yellow')
-                     ->setPadding(2, 4)
-                     ->setMarginAuto()
-                     ->setTitle($this->title);
-
-        $menu->build()
+        $this->buildMenu()
+             ->addLineBreak(config('artisanui.ui.line_break', '='))
+             ->setCheckboxStyle($this->getCheckboxStyle())
+             ->setSelectableStyle($this->getSelectableStyle())
+             ->setBorder(
+                config('artisanui.ui.border_horizontal', 2), 
+                config('artisanui.ui.border_vertical', 4),
+                config('artisanui.ui.border_color', 'yellow'),
+             )
+             ->setPadding(
+                config('artisanui.ui.padding_horizontal', 2), 
+                config('artisanui.ui.padding_vertical', 4),
+             )
+             ->setForegroundColour(
+                config('artisanui.ui.text_color', 'white')
+             )
+             ->setBackgroundColour(
+                config('artisanui.ui.background_color', 'blue')
+             )
+             ->setMarginAuto()
+             ->setTitle($this->title)
+             ->build()
              ->open();
     }
 
@@ -115,7 +131,7 @@ class Artisanui
             $builder->addLineBreak('-')
                     ->addItem(
                         "Execute command. " . ($required ? $required : "") , 
-                        function (CliMenu $menu) use ($input, $arguments, $self) {
+                        function (CliMenu $menu) use ($input, $arguments, $self, $cmd) {
                             $options = [];
 
                             foreach ($arguments as $argument) {
@@ -132,10 +148,13 @@ class Artisanui
                                 $options[$argument->getName()] = $answer->fetch();
                             }
 
-                            $input = new ArgvInput(array_merge([
-                                "_" => "",
+                            $input = new ArgvInput(array_merge(
+                                [
+                                    "" => "",
+                                    "command" => $cmd->name
+                                ],
                                 $options
-                            ]));
+                            ));
 
                             $self->artisan->handle($input, new ConsoleOutput());
                         }
@@ -213,5 +232,35 @@ class Artisanui
         return array_merge([
             'common' => $common
         ], $groups);
+    }
+
+    private function getCheckboxStyle()
+    {
+        $checkboxStyle = new CheckboxStyle();
+
+        $checkboxStyle->setCheckedMarker(
+            config('artisanui.ui.checked_marker', '[X]')
+        );
+
+        $checkboxStyle->setUncheckedMarker(
+            config('artisanui.ui.unchecked_marker', '[ ]')
+        );
+
+        return $checkboxStyle;
+    }
+
+    private function getSelectableStyle()
+    {
+        $selectableStyle = new SelectableStyle();
+
+        $selectableStyle->setSelectedMarker(
+            config('artisanui.ui.selected_marker', ' > ')
+        );
+        
+        $selectableStyle->setUnselectedMarker(
+            config('artisanui.ui.unselected_marker', ' o ')
+        );
+
+        return $selectableStyle;
     }
 }
