@@ -11,36 +11,52 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Input\InputArgument;
 use PhpSchool\CliMenu\Style\CheckboxStyle;
 use PhpSchool\CliMenu\Style\SelectableStyle;
+use Closure;
 
 class ArtisanUI
 {
+    const DELIMITER = "         |";
+
     private $artisan;
     private $commands;
     private $favourite;
     private $title;
     private $all;
+    private $menu;
 
     public function __construct(Kernel $kernel)
     {
         $this->artisan = $kernel;
     }
 
-    public static function getItem(string $name, $command) 
+    public function launch() :void
+    {
+        $this->getAllArtisanCommands()
+             ->loadFavouriteCommands()
+             ->loadTitle()
+             ->buildMenu()
+             ->stylishMenu()
+             ->showMenu();
+    }
+
+    private static function buildItem(string $name, $command) :object
     {
         return (object) [
-            'name' => $name,
+            'name'    => $name,
             'command' => $command
         ];
     }
 
-    public function launch()
+    private function showMenu() :void
     {
-        $this->commands = $this->getAllArtisanCommands();
-        $this->favourite = $this->loadFavouriteCommands();
+        $this->menu
+             ->build()
+             ->open();
+    }
 
-        $this->title = config('artisanui.title');
-
-        $this->buildMenu()
+    private function stylishMenu() :self
+    {
+        $this->menu
              ->addLineBreak(config('artisanui.ui.line_break', '='))
              ->setCheckboxStyle($this->getCheckboxStyle())
              ->setSelectableStyle($this->getSelectableStyle())
@@ -60,40 +76,35 @@ class ArtisanUI
                 config('artisanui.ui.background_color', 'blue')
              )
              ->setMarginAuto()
-             ->setTitle($this->title)
-             ->build()
-             ->open();
+             ->setTitle($this->title);
+
+        return $this;
     }
 
     // callback for commands without options
-    private function getExecutionCallback()
+    private function getExecutionCallback($command) :Closure
     {
-        $args = func_get_args();
+        $input = [
+            'command' => $command->name
+        ];
 
-        return function (CliMenu $menu) use ($args) {
-            [$cmd, $self] = $args;
-
-            $input = new ArrayInput([
-                'command' => $cmd->name
-            ]);
-
-            $self->artisan->handle($input, new ConsoleOutput());
+        $closure = function (CliMenu $menu) use ($input) {
+            $this->artisan->handle(
+                new ArrayInput($input), 
+                new ConsoleOutput()
+            );
         };
+
+        return $closure->bindTo($this);
     }
 
     // callback for commands with options
-    private function getCommandCallback()
+    private function getCommandCallback($command) :Closure
     {
-        $args = func_get_args();
+        [$name, $command] = [$command->name, $command->command];
 
-        $self = $this;
-
-        return function (CliMenuBuilder $builder) use ($args, $self) {
-            [$cmd, $self] = $args;
-
-            $arguments = $cmd->command
-                             ->getDefinition()
-                             ->getArguments();
+        $closure = function (CliMenuBuilder $builder) use ($name, $command) {
+            $arguments = $command->getDefinition()->getArguments();
 
             $required = [];
             $optional = false;
@@ -110,7 +121,7 @@ class ArtisanUI
                             "The next options are required: " . implode(', ', $required) : 
                             false;
 
-            $builder->setTitle("artisan {$cmd->name}");
+            $builder->setTitle("artisan {$name}");
 
             if ($required) {
                 $builder->addStaticItem($required);
@@ -121,13 +132,12 @@ class ArtisanUI
                         ->addLineBreak();
             }
 
+            // object for collecting selected options
             $input = collect([]);
 
-            $delimiter = "          |";
-
             // callback for optional checkboxes
-            $checkboxCallback = function (CliMenu $menu) use (&$input, $delimiter) {
-                [$name] = explode($delimiter, $menu->getSelectedItem()->getText());
+            $checkboxCallback = function (CliMenu $menu) use (&$input) {
+                [$name] = explode(self::DELIMITER, $menu->getSelectedItem()->getText());
 
                 $input->has($name) ? $input->pull($name) : $input->put($name, true);
             };
@@ -138,113 +148,154 @@ class ArtisanUI
                 }
 
                 $builder->addCheckboxItem(
-                    $argument->getName() . $delimiter . $argument->getDescription(),
+                    $argument->getName() . self::DELIMITER . $argument->getDescription(),
                     $checkboxCallback
                 );
             }
 
+            $executeClosure = function (CliMenu $menu) use ($input, $arguments, $name) {
+                $options = [];
+
+                foreach ($arguments as $argument) {
+                    if (!$argument->isRequired() && !$input->has($argument->getName())) {
+                        continue;
+                    }
+
+                    $description = $argument->getDescription() . " (--" . $argument->getName() . ")";
+
+                    $answer = $menu->askText()
+                                   ->setPromptText("Enter $description")
+                                   ->ask();
+
+                    $options[$argument->getName()] = $answer->fetch();
+                }
+
+                $input = [
+                    "" => "",
+                    "command" => $name
+                ];
+
+                $this->artisan->handle(
+                    new ArgvInput($input + $options), 
+                    new ConsoleOutput()
+                );
+            };
+
             $builder->addLineBreak('-')
                     ->addItem(
-                        "Execute command. " . ($required ? $required : "") , 
-                        function (CliMenu $menu) use ($input, $arguments, $self, $cmd) {
-                            $options = [];
-
-                            foreach ($arguments as $argument) {
-                                if (!$argument->isRequired() && !$input->has($argument->getName())) {
-                                    continue;
-                                }
-
-                                $description = $argument->getDescription() . " (--" . $argument->getName() . ")";
-
-                                $answer = $menu->askText()
-                                               ->setPromptText("Enter $description")
-                                               ->ask();
-
-                                $options[$argument->getName()] = $answer->fetch();
-                            }
-
-                            $input = new ArgvInput(array_merge(
-                                [
-                                    "" => "",
-                                    "command" => $cmd->name
-                                ],
-                                $options
-                            ));
-
-                            $self->artisan->handle($input, new ConsoleOutput());
-                        }
+                        "Execute command. " . $required ?: "", 
+                        $executeClosure->bindTo($this)
                     );
         };
+
+        return $closure->bindTo($this);
     }
 
-    private function buildMenu()
+    private function buildFavouriteSection()
     {
-        $menu = new CliMenuBuilder();
+        $this->menu
+             ->addStaticItem('Favourite:')
+             ->addLineBreak(" ");
 
-        // yeah, right like in JavaScript! :)
-        $self = $this;
+        foreach ($this->all as $name => $command) {
+            if (!in_array($name, $this->favourite)) {
+                continue;
+            }   
 
-        $getItemCallback = function ($list, $group) use ($self) {
-            return function (CliMenuBuilder $builder) use ($list, $group, $self) {
-                $builder->setTitle("{$self->title} > {$group}");
+            $item = self::buildItem($name, $command);
+
+            if (!$command->withArguments) {
+                $this->menu->addItem($name, $this->getExecutionCallback($item));
+            } else {
+                $this->menu->addSubMenu($name, $this->getCommandCallback($item));
+            }
+        }
+    }
+
+    private function getItemsGroupClosure(array $list, string $group) :Closure
+    {
+        $closure = function (CliMenuBuilder $builder) use ($list, $group) {
+            $builder->setTitle("{$this->title} > {$group}");
+
+            foreach ($list as $cmd) {
+                if (!$cmd->command->withArguments) {
+                    $builder->addItem($cmd->name, $this->getExecutionCallback($cmd));
+                } else {
+                    $builder->addSubMenu($cmd->name, $this->getCommandCallback($cmd));
+                }
+            }
+
+            $builder = $builder->addLineBreak('-');
+        };
+
+        return $closure->bindTo($this);
+    }
+
+    private function buildMenu() :self
+    {
+        $this->menu = new CliMenuBuilder();
+
+        $closure = (function ($list, $group) {
+            return (function (CliMenuBuilder $builder) use ($list, $group) {
+                $builder->setTitle("{$this->title} > {$group}");
 
                 foreach ($list as $cmd) {
-                    $argsNumber = count($cmd->command->getDefinition()->getArguments());
-
-                    if ($argsNumber === 0) {
-                        $builder->addItem($cmd->name, $self->getExecutionCallback($cmd, $self));
+                    if (!$cmd->command->withArguments) {
+                        $builder->addItem($cmd->name, $this->getExecutionCallback($cmd));
                     } else {
-                        $builder->addSubMenu($cmd->name, $self->getCommandCallback($cmd, $self));
+                        $builder->addSubMenu($cmd->name, $this->getCommandCallback($cmd));
                     }
                 }
 
                 $builder = $builder->addLineBreak('-');
-            };
-        };
+            })->bindTo($this);
+        });
 
-        if (empty($this->favourite)) {
-            $menu->addStaticItem(
-                'You can add your favourite commands in config/artisanui.php to get fast access to them!'
-            );
-        } else {
-            $menu->addStaticItem('Favourite:')
-                 ->addLineBreak(" ");
+        $this->menu
+             ->addStaticItem(
+                 'You can add your favourite commands in config/artisanui.php to get fast access to them!'
+             );
 
-            foreach ($this->all as $name => $command) {
-                if (!in_array($name, $this->favourite)) {
-                    continue;
-                }   
-
-                $argsNumber = count($command->getDefinition()->getArguments());
-
-                $item = self::getItem($name, $command);
-
-                if ($argsNumber === 0) {
-                    $menu->addItem($name, $this->getExecutionCallback($item, $this));
-                } else {
-                    $menu->addSubMenu($name, $this->getCommandCallback($item, $this));
-                }
-            }
+        if (!empty($this->favourite)) {
+            $this->buildFavouriteSection();
         }
 
-        $menu->addLineBreak(" ")
+        $this->menu
+             ->addLineBreak(" ")
              ->addLineBreak(config('artisanui.ui.line_break', '='));
 
         foreach ($this->commands as $group => $list) {
-            $menu->addSubMenu($group, $getItemCallback($list, $group));
+            $this->menu->addSubMenu($group, $closure($list, $group)->bindTo($this));
         }
 
-        return $menu;
+        return $this;
     }
 
-    private function loadFavouriteCommands()
+    private function loadTitle() :self
     {
-        return config('artisanui.favourite', []);
+        $this->title = config('artisanui.title', "");
+
+        return $this;
     }
 
-    private function getAllArtisanCommands()
+    private function loadFavouriteCommands() :self
     {
-        $this->all = $this->artisan->all();
+        $this->favourite = config('artisanui.favourite', []);
+
+        return $this;
+    }
+
+    private function getAllArtisanCommands() :self
+    {
+        $all = $this->artisan->all();
+
+        $this->all = [];
+
+        foreach ($all as $command) {
+            $command->withArguments = count($command->getDefinition()->getArguments()) !== 0;
+
+            $this->all[$command->getName()] = $command;
+        }
 
         $groups = [];
         $common = [];
@@ -254,7 +305,7 @@ class ArtisanUI
 
             $chunksNumber = count($cmd);
 
-            $item = self::getItem($name, $command);
+            $item = self::buildItem($name, $command);
 
             if ($chunksNumber === 1 || $chunksNumber > 2) {
                 $common[] = $item;
@@ -279,12 +330,12 @@ class ArtisanUI
             });
         }
 
-        return array_merge([
-            'common' => $common
-        ], $groups);
+        $this->commands = ['common' => $common] + $groups;
+
+        return $this;
     }
 
-    private function getCheckboxStyle()
+    private function getCheckboxStyle() :CheckboxStyle
     {
         $checkboxStyle = new CheckboxStyle();
 
@@ -299,7 +350,7 @@ class ArtisanUI
         return $checkboxStyle;
     }
 
-    private function getSelectableStyle()
+    private function getSelectableStyle() :SelectableStyle
     {
         $selectableStyle = new SelectableStyle();
 
