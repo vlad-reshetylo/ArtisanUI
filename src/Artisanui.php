@@ -39,14 +39,6 @@ class ArtisanUI
              ->showMenu();
     }
 
-    private static function buildItem(string $name, $command) :object
-    {
-        return (object) [
-            'name'    => $name,
-            'command' => $command
-        ];
-    }
-
     private function showMenu() :void
     {
         $this->menu
@@ -85,7 +77,7 @@ class ArtisanUI
     private function getExecutionCallback($command) :Closure
     {
         $input = [
-            'command' => $command->name
+            'command' => $command->getName()
         ];
 
         $closure = function (CliMenu $menu) use ($input) {
@@ -101,7 +93,7 @@ class ArtisanUI
     // callback for commands with options
     private function getCommandCallback($command) :Closure
     {
-        [$name, $command] = [$command->name, $command->command];
+        [$name, $command] = [$command->getName(), $command];
 
         $closure = function (CliMenuBuilder $builder) use ($name, $command) {
             $arguments = $command->getDefinition()->getArguments();
@@ -202,12 +194,10 @@ class ArtisanUI
                 continue;
             }   
 
-            $item = self::buildItem($name, $command);
-
             if (!$command->withArguments) {
-                $this->menu->addItem($name, $this->getExecutionCallback($item));
+                $this->menu->addItem($name, $this->getExecutionCallback($command));
             } else {
-                $this->menu->addSubMenu($name, $this->getCommandCallback($item));
+                $this->menu->addSubMenu($name, $this->getCommandCallback($command));
             }
         }
     }
@@ -218,10 +208,16 @@ class ArtisanUI
             $builder->setTitle("{$this->title} > {$group}");
 
             foreach ($list as $cmd) {
-                if (!$cmd->command->withArguments) {
-                    $builder->addItem($cmd->name, $this->getExecutionCallback($cmd));
+                if (!$cmd->withArguments) {
+                    $builder->addItem(
+                        $cmd->getName(), 
+                        $this->getExecutionCallback($cmd)
+                    );
                 } else {
-                    $builder->addSubMenu($cmd->name, $this->getCommandCallback($cmd));
+                    $builder->addSubMenu(
+                        $cmd->getName(), 
+                        $this->getCommandCallback($cmd)
+                    );
                 }
             }
 
@@ -234,22 +230,6 @@ class ArtisanUI
     private function buildMenu() :self
     {
         $this->menu = new CliMenuBuilder();
-
-        $closure = (function ($list, $group) {
-            return (function (CliMenuBuilder $builder) use ($list, $group) {
-                $builder->setTitle("{$this->title} > {$group}");
-
-                foreach ($list as $cmd) {
-                    if (!$cmd->command->withArguments) {
-                        $builder->addItem($cmd->name, $this->getExecutionCallback($cmd));
-                    } else {
-                        $builder->addSubMenu($cmd->name, $this->getCommandCallback($cmd));
-                    }
-                }
-
-                $builder = $builder->addLineBreak('-');
-            })->bindTo($this);
-        });
 
         $this->menu
              ->addStaticItem(
@@ -265,7 +245,10 @@ class ArtisanUI
              ->addLineBreak(config('artisanui.ui.line_break', '='));
 
         foreach ($this->commands as $group => $list) {
-            $this->menu->addSubMenu($group, $closure($list, $group)->bindTo($this));
+            $this->menu->addSubMenu(
+                $group, 
+                $this->getItemsGroupClosure($list, $group)->bindTo($this)
+            );
         }
 
         return $this;
@@ -305,10 +288,8 @@ class ArtisanUI
 
             $chunksNumber = count($cmd);
 
-            $item = self::buildItem($name, $command);
-
             if ($chunksNumber === 1 || $chunksNumber > 2) {
-                $common[] = $item;
+                $common[] = $command;
 
                 continue;
             }
@@ -318,7 +299,7 @@ class ArtisanUI
                     $groups[$cmd[0]] = [];
                 }
 
-                $groups[$cmd[0]][] = $item;
+                $groups[$cmd[0]][] = $command;
             }
         }
 
@@ -326,7 +307,7 @@ class ArtisanUI
 
         foreach ($groups as &$list) {
             usort($list, function ($first, $second) {
-                return strcmp($first->name, $second->name);
+                return strcmp($first->getName(), $second->getName());
             });
         }
 
