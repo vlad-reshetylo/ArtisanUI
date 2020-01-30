@@ -19,19 +19,13 @@
     "minimum-stability": "stable",
     "require": {
         "php": "^7.1",
-        "vladreshet/cli-menu": "3.2.2"
+        "vladreshet/cli-menu": "^3.2"
     },
     "autoload": {
         "psr-4": {
             "VladReshet\\ArtisanUI\\": "src"
         }
     },
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/VladReshet/cli-menu"
-        }
-    ],
     "extra": {
         "laravel": {
             "providers": [
