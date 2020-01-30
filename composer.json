@@ -19,9 +19,7 @@
     "minimum-stability": "stable",
     "require": {
         "php": "^7.1",
-        "php-school/cli-menu": "3.2.1"
-    },
-    "require-dev": {
+        "vladreshet/cli-menu": "3.2.2",
         "laravel/framework": "^6.0"
     },
     "autoload": {
