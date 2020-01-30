@@ -6,11 +6,11 @@
 return [
     'title' => env('APP_NAME') . " " . "Artisan UI",
     'ui' => [
-        'border_horizontal' => 3,
-        'border_vertical' => 5,
+        'border_horizontal' => 1,
+        'border_vertical' => 2,
         'border_color' => 'green',
-        'padding_horizontal' => 2,
-        'padding_vertical' => 4,
+        'padding_horizontal' => 1,
+        'padding_vertical' => 2,
         'text_color' => 'white',
         'background_color' => 'blue',
         'checked_marker' => '[X]',

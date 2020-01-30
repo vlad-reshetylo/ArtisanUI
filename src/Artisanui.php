@@ -15,7 +15,7 @@ use Closure;
 
 class ArtisanUI
 {
-    const DELIMITER = "         |";
+    const DELIMITER = "   |";
 
     private $artisan;
     private $commands;
@@ -53,13 +53,13 @@ class ArtisanUI
              ->setCheckboxStyle($this->getCheckboxStyle())
              ->setSelectableStyle($this->getSelectableStyle())
              ->setBorder(
-                config('artisanui.ui.border_horizontal', 2), 
-                config('artisanui.ui.border_vertical', 4),
+                config('artisanui.ui.border_horizontal', 1), 
+                config('artisanui.ui.border_vertical', 2),
                 config('artisanui.ui.border_color', 'yellow'),
              )
              ->setPadding(
-                config('artisanui.ui.padding_horizontal', 2), 
-                config('artisanui.ui.padding_vertical', 4),
+                config('artisanui.ui.padding_horizontal', 1), 
+                config('artisanui.ui.padding_vertical', 2),
              )
              ->setForegroundColour(
                 config('artisanui.ui.text_color', 'white')
@@ -97,9 +97,10 @@ class ArtisanUI
 
         $closure = function (CliMenuBuilder $builder) use ($name, $command) {
             $arguments = $command->getDefinition()->getArguments();
+            $options = $command->getDefinition()->getOptions();
 
             $required = [];
-            $optional = false;
+            $optional = count($options) !== 0;
 
             foreach ($arguments as $argument) {
                 if ($argument->isRequired()) {
@@ -145,8 +146,15 @@ class ArtisanUI
                 );
             }
 
-            $executeClosure = function (CliMenu $menu) use ($input, $arguments, $name) {
-                $options = [];
+            foreach ($options as $option) {
+                $builder->addCheckboxItem(
+                    $option->getName() . self::DELIMITER . $option->getDescription(),
+                    $checkboxCallback
+                );
+            }
+
+            $executeClosure = function (CliMenu $menu) use ($input, $arguments, $options, $name) {
+                $parameters = [];
 
                 foreach ($arguments as $argument) {
                     if (!$argument->isRequired() && !$input->has($argument->getName())) {
@@ -159,7 +167,21 @@ class ArtisanUI
                                    ->setPromptText("Enter $description")
                                    ->ask();
 
-                    $options[$argument->getName()] = $answer->fetch();
+                    $parameters[$argument->getName()] = $answer->fetch();
+                }
+
+                foreach ($options as $option) {
+                    if (!$input->has($option->getName())) {
+                        continue;
+                    }
+
+                    $description = $option->getDescription() . " (--" . $option->getName() . ")";
+
+                    $answer = $menu->askText()
+                                   ->setPromptText("Enter $description")
+                                   ->ask();
+
+                    $parameters[$option->getName()] = "--" . $option->getName() . "=" . $answer->fetch();
                 }
 
                 $input = [
@@ -168,7 +190,7 @@ class ArtisanUI
                 ];
 
                 $this->artisan->handle(
-                    new ArgvInput($input + $options), 
+                    new ArgvInput($input + $parameters), 
                     new ConsoleOutput()
                 );
             };
@@ -275,7 +297,10 @@ class ArtisanUI
         $this->all = [];
 
         foreach ($all as $command) {
-            $command->withArguments = count($command->getDefinition()->getArguments()) !== 0;
+            $options = $command->getDefinition()->getOptions();
+            $arguments = $command->getDefinition()->getArguments();
+
+            $command->withArguments = count($options) !== 0 || count($arguments) !== 0;
 
             $this->all[$command->getName()] = $command;
         }
