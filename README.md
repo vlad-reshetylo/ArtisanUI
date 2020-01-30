@@ -37,6 +37,7 @@ or
 ``` bash
 ./artisanui
 ```
+_Note: This package doesn't work on Windows platforms._
 
 ## Contributing
 
