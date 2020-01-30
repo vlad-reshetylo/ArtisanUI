@@ -26,8 +26,6 @@ this will allow you to do the next:
 php artisan vendor:publish --provider=VladReshet\\ArtisanUI\\ArtisanUIServiceProvider
 ```
 
-⚠️**Attention! Now this package uses not stable version of one of its dependencies. It will be fixed as soon as that dependency will release new update, but for now your project minimum-stability settings should be not higher than "dev" to install this package**⚠️
-
 ## Usage
 
 You can use it like a usual laravel artisan.
