@@ -11,11 +11,12 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Input\InputArgument;
 use PhpSchool\CliMenu\Style\CheckboxStyle;
 use PhpSchool\CliMenu\Style\SelectableStyle;
+use VladReshet\ArtisanUI\CommandsSet;
 use Closure;
 
 class ArtisanUI
 {
-    const DELIMITER = "   |";
+    const DELIMITER = "   | ";
 
     private $artisan;
     private $commands;
@@ -31,25 +32,23 @@ class ArtisanUI
 
     public function launch() :void
     {
-        $this->getAllArtisanCommands()
-             ->loadFavouriteCommands()
-             ->loadTitle()
-             ->buildMenu()
-             ->stylishMenu()
-             ->showMenu();
-    }
+        $commands = $this->getAllArtisanCommands();
 
-    private function showMenu() :void
-    {
-        $this->menu
-             ->build()
+        $set = (new CommandsSet())
+                ->setAll($commands['all'])
+                ->setGrouped($commands['grouped'])
+                ->setFavourite(config('artisanui.favourite', []));
+
+        $menu = $this->describeMenu($set);
+        $menu = $this->stylishMenu($menu);
+
+        $menu->build()
              ->open();
     }
 
-    private function stylishMenu() :self
+    private function stylishMenu(CliMenuBuilder $menu) :CliMenuBuilder
     {
-        $this->menu
-             ->addLineBreak(config('artisanui.ui.line_break', '='))
+        $menu->addLineBreak(config('artisanui.ui.line_break', '='))
              ->setCheckboxStyle($this->getCheckboxStyle())
              ->setSelectableStyle($this->getSelectableStyle())
              ->setBorder(
@@ -68,9 +67,9 @@ class ArtisanUI
                 config('artisanui.ui.background_color', 'blue')
              )
              ->setMarginAuto()
-             ->setTitle($this->title);
+             ->setTitle(config('artisanui.title', ""));
 
-        return $this;
+        return $menu;
     }
 
     // callback for commands without options
@@ -91,13 +90,13 @@ class ArtisanUI
     }
 
     // callback for commands with options
-    private function getCommandCallback($command) :Closure
+    private function getOptionalCallback($command) :Closure
     {
-        [$name, $command] = [$command->getName(), $command];
+        [$name, $command] = [$command->getName(), $command->getDefinition()];
 
         $closure = function (CliMenuBuilder $builder) use ($name, $command) {
-            $arguments = $command->getDefinition()->getArguments();
-            $options = $command->getDefinition()->getOptions();
+            $arguments = $command->getArguments();
+            $options = $command->getOptions();
 
             $required = [];
             $optional = count($options) !== 0;
@@ -121,7 +120,8 @@ class ArtisanUI
             }
 
             if ($optional) {
-                $builder->addStaticItem('Optional arguments (press Enter to select)')
+                $builder->addLineBreak()
+                        ->addStaticItem('Optional arguments (press Enter to select):')
                         ->addLineBreak();
             }
 
@@ -177,11 +177,17 @@ class ArtisanUI
 
                     $description = $option->getDescription() . " (--" . $option->getName() . ")";
 
-                    $answer = $menu->askText()
-                                   ->setPromptText("Enter $description")
-                                   ->ask();
+                    if ($option->acceptValue()) {
+                        $answer = $menu->askText()
+                                       ->setPromptText("Enter $description")
+                                       ->ask();
 
-                    $parameters[$option->getName()] = "--" . $option->getName() . "=" . $answer->fetch();
+                        $value = "--" . $option->getName() . "=" . $answer->fetch();
+                    } else {
+                        $value = "--" . $option->getName();
+                    }
+
+                    $parameters[$option->getName()] = $value;
                 }
 
                 $input = [
@@ -205,29 +211,37 @@ class ArtisanUI
         return $closure->bindTo($this);
     }
 
-    private function buildFavouriteSection()
+    private function buildFavouriteSection(
+        CliMenuBuilder $menu, 
+        CommandsSet $set
+    ) :CliMenuBuilder 
     {
-        $this->menu
-             ->addStaticItem('Favourite:')
+        $menu->addStaticItem('Favourite:')
              ->addLineBreak(" ");
 
-        foreach ($this->all as $name => $command) {
-            if (!in_array($name, $this->favourite)) {
+        $all = $set->getAll();
+
+        foreach ($all as $name => $command) {
+            if (!$set->isFavourite($name)) {
                 continue;
             }   
 
             if (!$command->withArguments) {
-                $this->menu->addItem($name, $this->getExecutionCallback($command));
+                $menu->addItem($name, $this->getExecutionCallback($command));
             } else {
-                $this->menu->addSubMenu($name, $this->getCommandCallback($command));
+                $menu->addSubMenu($name, $this->getOptionalCallback($command));
             }
         }
+
+        return $menu;
     }
 
     private function getItemsGroupClosure(array $list, string $group) :Closure
     {
-        $closure = function (CliMenuBuilder $builder) use ($list, $group) {
-            $builder->setTitle("{$this->title} > {$group}");
+        $title = config('artisanui.title', "");
+
+        $closure = function (CliMenuBuilder $builder) use ($list, $group, $title) {
+            $builder->setTitle("{$title} > {$group}");
 
             foreach ($list as $cmd) {
                 if (!$cmd->withArguments) {
@@ -238,7 +252,7 @@ class ArtisanUI
                 } else {
                     $builder->addSubMenu(
                         $cmd->getName(), 
-                        $this->getCommandCallback($cmd)
+                        $this->getOptionalCallback($cmd)
                     );
                 }
             }
@@ -249,52 +263,38 @@ class ArtisanUI
         return $closure->bindTo($this);
     }
 
-    private function buildMenu() :self
+    private function describeMenu(CommandsSet $set) :CliMenuBuilder
     {
-        $this->menu = new CliMenuBuilder();
+        $menu = new CliMenuBuilder();
 
-        $this->menu
-             ->addStaticItem(
-                 'You can add your favourite commands in config/artisanui.php to get fast access to them!'
-             );
+        $menu->addStaticItem(
+            'You can add your favourite commands in config/artisanui.php to get fast access to them!'
+        );
 
-        if (!empty($this->favourite)) {
-            $this->buildFavouriteSection();
+        if ($set->hasFavourite()) {
+            $menu = $this->buildFavouriteSection($menu, $set);
         }
 
-        $this->menu
-             ->addLineBreak(" ")
+        $menu->addLineBreak(" ")
              ->addLineBreak(config('artisanui.ui.line_break', '='));
 
-        foreach ($this->commands as $group => $list) {
-            $this->menu->addSubMenu(
+        $groups = $set->getGrouped();
+
+        foreach ($groups as $group => $list) {
+            $menu->addSubMenu(
                 $group, 
                 $this->getItemsGroupClosure($list, $group)->bindTo($this)
             );
         }
 
-        return $this;
+        return $menu;
     }
 
-    private function loadTitle() :self
-    {
-        $this->title = config('artisanui.title', "");
-
-        return $this;
-    }
-
-    private function loadFavouriteCommands() :self
-    {
-        $this->favourite = config('artisanui.favourite', []);
-
-        return $this;
-    }
-
-    private function getAllArtisanCommands() :self
+    private function getAllArtisanCommands() :array
     {
         $all = $this->artisan->all();
 
-        $this->all = [];
+        $associated = [];
 
         foreach ($all as $command) {
             $options = $command->getDefinition()->getOptions();
@@ -302,13 +302,13 @@ class ArtisanUI
 
             $command->withArguments = count($options) !== 0 || count($arguments) !== 0;
 
-            $this->all[$command->getName()] = $command;
+            $associated[$command->getName()] = $command;
         }
 
         $groups = [];
         $common = [];
 
-        foreach ($this->all as $name => $command) {
+        foreach ($associated as $name => $command) {
             $cmd = explode(':', $name);
 
             $chunksNumber = count($cmd);
@@ -336,9 +336,10 @@ class ArtisanUI
             });
         }
 
-        $this->commands = ['common' => $common] + $groups;
-
-        return $this;
+        return [
+            'all' => $associated,
+            'grouped' => ['common' => $common] + $groups
+        ];
     }
 
     private function getCheckboxStyle() :CheckboxStyle
