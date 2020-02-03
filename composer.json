@@ -18,6 +18,7 @@
     ],
     "minimum-stability": "stable",
     "require": {
+        "ext-posix": "*",
         "php": "^7.1",
         "vladreshet/cli-menu": "^3.2"
     },
