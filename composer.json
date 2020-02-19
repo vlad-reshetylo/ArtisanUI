@@ -20,7 +20,7 @@
     "require": {
         "ext-posix": "*",
         "php": "^7.1",
-        "vladreshet/cli-menu": "^3.2"
+        "php-school/cli-menu": "^4.0"
     },
     "autoload": {
         "psr-4": {
