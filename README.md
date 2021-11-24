@@ -15,7 +15,7 @@ You can install the package via composer:
 ```bash
 composer require vladreshet/artisanui --dev
 ```
-after updating composer, do the next:
+after composer install, do the following action:
 ```bash
 php artisan vendor:publish --tag=artisanui
 ```
