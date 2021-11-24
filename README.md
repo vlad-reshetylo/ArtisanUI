@@ -20,6 +20,8 @@ after composer install, do the following action:
 php artisan vendor:publish --tag=artisanui
 ```
 
+if you have laravel version < 5.5 register VladReshet\ArtisanUi\ArtisanUiServiceProvider
+
 That's all!
 
 ## Usage
