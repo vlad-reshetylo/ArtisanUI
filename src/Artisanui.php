@@ -1,6 +1,6 @@
 <?php
 
-namespace VladReshet\ArtisanUI;
+namespace VladReshet\ArtisanUi;
 
 use Illuminate\Contracts\Console\Kernel;
 use PhpSchool\CliMenu\CliMenu;
@@ -11,10 +11,10 @@ use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Input\InputArgument;
 use PhpSchool\CliMenu\Style\CheckboxStyle;
 use PhpSchool\CliMenu\Style\SelectableStyle;
-use VladReshet\ArtisanUI\CommandsSet;
+use VladReshet\ArtisanUi\CommandsSet;
 use Closure;
 
-class ArtisanUI
+class ArtisanUi
 {
     const DELIMITER = "   | ";
 

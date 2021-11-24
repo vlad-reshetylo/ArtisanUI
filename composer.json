@@ -7,6 +7,7 @@
         "php",
         "artisanui"
     ],
+    "license": "MIT",
     "homepage": "https://github.com/vladreshet/artisanui",
     "license": "MIT",
     "authors": [
@@ -19,22 +20,20 @@
     "minimum-stability": "stable",
     "require": {
         "ext-posix": "*",
-        "php": "^7.1",
-        "php-school/cli-menu": "^4.0"
+        "php": "^7.2|^8.0",
+        "php-school/cli-menu": "^4.1",
+        "laravel/laravel": ">=6.0"
     },
     "autoload": {
         "psr-4": {
-            "VladReshet\\ArtisanUI\\": "src"
+            "VladReshet\\ArtisanUi\\": "src/"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "VladReshet\\ArtisanUI\\ArtisanUIServiceProvider"
-            ],
-            "aliases": {
-                "ArtisanUI": "VladReshet\\ArtisanUI\\ArtisanUIFacade"
-            }
+                "VladReshet\\ArtisanUi\\ArtisanUiServiceProvider"
+            ]
         }
     }
 }

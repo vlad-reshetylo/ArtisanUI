@@ -1,10 +1,11 @@
 <?php
 
-namespace VladReshet\ArtisanUI;
+namespace VladReshet\ArtisanUi;
 
 use Illuminate\Support\ServiceProvider;
+use VladReshet\ArtisanUi\Console\Commands\Ui;
 
-class ArtisanUIServiceProvider extends ServiceProvider
+class ArtisanUiServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
@@ -12,12 +13,13 @@ class ArtisanUIServiceProvider extends ServiceProvider
     public function boot()
     {
         $this->publishes([
-            __DIR__.'/root/artisanui' => base_path('artisanui'),
-            __DIR__.'/../config/config.php' => config_path('artisanui.php'),
+            __DIR__ . '/config/config.php' => config_path('artisanui.php'),
         ], 'artisanui');
-    }
 
-    public function register()
-    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([
+                Ui::class,
+            ]);
+        }
     }
 }

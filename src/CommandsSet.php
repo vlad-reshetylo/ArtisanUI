@@ -1,6 +1,6 @@
 <?php
 
-namespace VladReshet\ArtisanUI;
+namespace VladReshet\ArtisanUi;
 
 // DTO for menu settings and commands
 class CommandsSet
