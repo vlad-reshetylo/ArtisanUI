@@ -17,19 +17,21 @@ composer require vladreshet/artisanui --dev
 ```
 after updating composer, do the next:
 ```bash
-php artisan vendor:publish --provider=VladReshet\\ArtisanUI\\ArtisanUIServiceProvider
+php artisan vendor:publish --tag=artisanui
 ```
+
+That's all!
 
 ## Usage
 
-You can use it like a usual laravel artisan.
+You can use it via artisan "ui" command
 
 ``` bash
-php artisanui
+php artisan ui
 ```
 or
 ``` bash
-./artisanui
+./artisan ui
 ```
 _Note: This package doesn't work on Windows platforms._
 
